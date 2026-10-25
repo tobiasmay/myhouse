@@ -69,6 +69,9 @@ assets/dashboard-app/packageinfo.json assets/dashboard-app/install-app.sh \
 assets/dashboard-app/assets/icon80.png assets/dashboard-app/assets/icon130.png \
 assets/home.html assets/home-app/appinfo.json assets/home-app/index.html assets/home-app/packageinfo.json \
 assets/home-app/assets/icon80.png assets/home-app/assets/icon130.png \
+assets/icons/ATTRIBUTION.md assets/icons/apple-tv.svg assets/icons/arte.svg assets/icons/das-erste.svg \
+assets/icons/disney-plus.svg assets/icons/jellyfin.svg assets/icons/netflix.svg \
+assets/icons/prime-video.svg assets/icons/spotify.svg assets/icons/youtube.svg assets/icons/zdf.svg \
 assets/fonts/Outfit.ttf assets/fonts/Manrope.ttf \
 assets/fonts/Outfit-Light.ttf assets/fonts/Outfit-Regular.ttf \
 assets/fonts/Manrope-Regular.ttf assets/fonts/Manrope-SemiBold.ttf \
