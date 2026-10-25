@@ -14,12 +14,36 @@
 @font-face{font-family:'Outfit';src:url('/assets/fonts/Outfit-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
 @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
 @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+:root{
+  /* Glass tokens: a frosted surface over the wallpaper, not a flat panel.
+     Kept subtle so the picture (or the ambient wash, with none uploaded)
+     still reads through. Falls back to a plain translucent fill on a
+     browser without backdrop-filter; nothing breaks, it just loses the blur. */
+  --glass-fill:rgba(236,231,223,.08);
+  --glass-fill-strong:rgba(236,231,223,.16);
+  --glass-edge:rgba(236,231,223,.16);
+  --glass-edge-strong:rgba(236,231,223,.38);
+  --glass-blur:blur(22px) saturate(160%);
+}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;background:#000;overflow:hidden}
 body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased;cursor:default}
 
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;background:#000;overflow:hidden;
   -webkit-transform-origin:0 0;transform-origin:0 0}
+
+/* Ambient wash: always present, under the wallpaper layers. With no picture
+   uploaded this is the whole background, so the glass rows still have warm
+   light to catch rather than sitting on flat black; with one uploaded it
+   just keeps the far corners from ever reading as pure black. Pure CSS, no
+   image, cheap to animate slowly. */
+#ambient{position:absolute;left:0;top:0;right:0;bottom:0;background:#000}
+#ambient:before{content:"";position:absolute;left:0;top:0;right:0;bottom:0;
+  background:radial-gradient(ellipse 60% 55% at 85% -8%,rgba(233,173,85,.16),rgba(233,173,85,0) 60%),
+    radial-gradient(ellipse 65% 60% at -10% 108%,rgba(97,120,163,.14),rgba(97,120,163,0) 60%);
+  -webkit-animation:ambient-drift 240s ease-in-out infinite alternate;animation:ambient-drift 240s ease-in-out infinite alternate}
+@-webkit-keyframes ambient-drift{from{-webkit-transform:scale(1) translate(0,0)}to{-webkit-transform:scale(1.12) translate(-2%,2%)}}
+@keyframes ambient-drift{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(-2%,2%)}}
 
 /* Two layers cross-fade when the slot changes. The drift keeps the picture
    from sitting still on the panel; the scrim keeps the text side and the rows
@@ -31,9 +55,9 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
 @-webkit-keyframes drift{from{-webkit-transform:scale(1) translate(0,0)}to{-webkit-transform:scale(1.04) translate(-1.2%,-.8%)}}
 @keyframes drift{from{transform:scale(1) translate(0,0)}to{transform:scale(1.04) translate(-1.2%,-.8%)}}
 #scrim{position:absolute;left:0;top:0;right:0;bottom:0;
-  background:radial-gradient(ellipse 34% 30% at 92% 14%,rgba(0,0,0,.55),rgba(0,0,0,0)),
-    linear-gradient(90deg,rgba(0,0,0,.72) 0%,rgba(0,0,0,.35) 38%,rgba(0,0,0,0) 70%),
-    linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,.45) 36%,rgba(0,0,0,.82) 62%,rgba(0,0,0,.92) 100%)}
+  background:radial-gradient(ellipse 34% 30% at 92% 14%,rgba(0,0,0,.45),rgba(0,0,0,0)),
+    linear-gradient(90deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.28) 38%,rgba(0,0,0,0) 70%),
+    linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,.38) 36%,rgba(0,0,0,.74) 62%,rgba(0,0,0,.86) 100%)}
 
 #now,#rows{position:relative}
 #now,.row h2,.tile{text-shadow:0 1px 12px rgba(0,0,0,.55)}
@@ -85,15 +109,32 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
 .track{display:-webkit-flex;display:flex;white-space:nowrap;
   -webkit-transition:-webkit-transform .28s cubic-bezier(.2,.7,.2,1);transition:transform .28s cubic-bezier(.2,.7,.2,1)}
 
-.tile{position:relative;-webkit-flex:0 0 auto;flex:0 0 auto;margin-right:8px;padding:16px 20px 18px;border-radius:6px;
-  outline:2px solid transparent;opacity:.8;
-  -webkit-transition:background-color .12s,outline-color .12s,-webkit-transform .12s;transition:background-color .12s,outline-color .12s,transform .12s}
+.tile{position:relative;-webkit-flex:0 0 auto;flex:0 0 auto;margin-right:8px;padding:16px 20px 18px;border-radius:14px;
+  outline:1px solid transparent;opacity:.8;background:var(--glass-fill);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset;
+  -webkit-transition:background-color .16s,outline-color .16s,box-shadow .16s,-webkit-transform .16s;
+  transition:background-color .16s,outline-color .16s,box-shadow .16s,transform .16s}
 .row:not(.active) .tile{opacity:.58}
-.tile.focus{background:rgba(20,19,16,.86);outline-color:#ece7df;opacity:1}
+/* Focused: a lighter, more saturated pane of the same glass, lifted off the
+   shelf rather than painted a flat panel, with the accent-less outline the
+   look's own colours swap keeps for focus. */
+.tile.focus{background:linear-gradient(165deg,var(--glass-fill-strong),var(--glass-fill));
+  outline-color:var(--glass-edge-strong);opacity:1;
+  -webkit-transform:translateY(-3px) scale(1.035);transform:translateY(-3px) scale(1.035);
+  box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 18px 40px -12px rgba(0,0,0,.6)}
 
 .app{width:168px;padding:14px;text-align:center}
-.app img,.app .mono{display:block;width:112px;height:112px;margin:0 auto;border-radius:14px}
-.app .mono{background:#2a2825;color:#ece7df;font-family:'Outfit',sans-serif;font-size:44px;font-weight:300;line-height:112px}
+.app .icon{position:relative;width:112px;height:112px;margin:0 auto;border-radius:22px;overflow:hidden;
+  background:linear-gradient(165deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
+  box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 10px 22px -10px rgba(0,0,0,.5)}
+/* Native webOS icons are small (80-130px); shown a touch smaller than their
+   glass tray, with padding, the resize/pixelation reads as intentional
+   rather than blurry. Curated icons (ICON_OVERRIDES, see the script) skip
+   this inset and fill the tray, since they're vector and sharp at any size. */
+.app .icon img{display:block;width:100%;height:100%;object-fit:contain;padding:14px}
+.app .icon img.sharp{padding:20px}
+.app .icon .mono{display:block;width:100%;height:100%;color:#ece7df;font-family:'Outfit',sans-serif;font-size:44px;font-weight:300;line-height:112px;text-align:center}
 .app .nm{font-size:21px;font-weight:600;margin-top:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .dev{width:380px;height:124px;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;
@@ -118,7 +159,8 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
 
 /* Arranging */
 .arranging .row h2{color:#ece7df}
-.row h2 .sort{display:none;margin-left:22px;font-style:normal;font-size:20px;color:#a39d93;padding:4px 14px;border-radius:5px;background:#141310;
+.row h2 .sort{display:none;margin-left:22px;font-style:normal;font-size:20px;color:#a39d93;padding:4px 14px;border-radius:8px;
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
   outline:2px solid transparent;vertical-align:2px}
 .arranging .row h2 .sort{display:inline-block}
 .arranging .row .sort.focus{color:#ece7df;outline-color:#e9ad55}
@@ -131,15 +173,19 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
 .tile.hidden .hid{display:block}
 .arranging .row.held-row h2{color:#e9ad55}
 #banner{position:absolute;left:112px;right:112px;bottom:26px;display:none;-webkit-align-items:center;align-items:center;
-  font-size:20px;color:#a39d93;padding:14px 22px;border-radius:6px;background:#141310;border-left:3px solid #e9ad55}
+  font-size:20px;color:#a39d93;padding:14px 22px;border-radius:14px;background:var(--glass-fill);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border-left:3px solid #e9ad55;
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 14px 30px -14px rgba(0,0,0,.55)}
 .arranging #banner{display:-webkit-flex;display:flex}
 #banner b{color:#ece7df;font-weight:600;margin-right:8px}
 #banner .keys{-webkit-flex:1 1 auto;flex:1 1 auto;margin-left:34px}
-#banner .btn{margin-left:12px;padding:8px 18px;border-radius:5px;color:#ece7df;background:#231d12;outline:2px solid transparent}
+#banner .btn{margin-left:12px;padding:8px 18px;border-radius:8px;color:#ece7df;background:var(--glass-fill-strong);outline:2px solid transparent}
 #banner .btn.focus{outline-color:#e9ad55}
 
-#toast{position:absolute;z-index:1;left:112px;bottom:26px;font-size:23px;color:#ece7df;padding:14px 22px;border-radius:6px;
-  background:#141310;border-left:3px solid #e9ad55;opacity:0;-webkit-transform:translateY(8px);transform:translateY(8px);
+#toast{position:absolute;z-index:1;left:112px;bottom:26px;font-size:23px;color:#ece7df;padding:14px 22px;border-radius:14px;
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  border-left:3px solid #e9ad55;opacity:0;-webkit-transform:translateY(8px);transform:translateY(8px);
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 14px 30px -14px rgba(0,0,0,.55);
   -webkit-transition:opacity .2s,-webkit-transform .2s;transition:opacity .2s,transform .2s;max-width:1100px}
 #toast.show{opacity:1;-webkit-transform:none;transform:none}
 #toast small{display:block;font-size:18px;color:#a39d93;margin-top:4px}
@@ -150,22 +196,24 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
    the focused one at full strength in a warm white frame, the rest dimmed.
    Close shows only under the focused card; down reaches it. */
 #recents{position:absolute;left:0;right:0;bottom:0;height:560px;padding-top:92px;
-  background:linear-gradient(180deg,rgba(0,0,0,0) 0,rgba(0,0,0,.94) 64px,#000 120px);
+  background:linear-gradient(180deg,rgba(0,0,0,0) 0,rgba(10,9,8,.8) 64px,rgba(6,6,5,.94) 120px);
+  -webkit-backdrop-filter:blur(34px) saturate(150%);backdrop-filter:blur(34px) saturate(150%);
   -webkit-transform:translateY(100%);transform:translateY(100%);visibility:hidden;
   -webkit-transition:-webkit-transform .32s cubic-bezier(.2,.7,.2,1),visibility 0s .32s;transition:transform .32s cubic-bezier(.2,.7,.2,1),visibility 0s .32s}
 .recents #recents{-webkit-transform:none;transform:none;visibility:visible;-webkit-transition-delay:0s;transition-delay:0s}
 #rows,#now{-webkit-transition:opacity .32s;transition:opacity .32s}
 .recents #rows,.recents #now{opacity:.25}
-.recents #rows .tile.focus{outline-color:transparent;background:none}
+.recents #rows .tile.focus{outline-color:transparent;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 #recents .head{display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;padding:0 112px;margin-bottom:18px}
 #recents h2{-webkit-flex:1 1 auto;flex:1 1 auto;font-family:'Outfit',sans-serif;font-size:40px;font-weight:300;letter-spacing:-.3px;color:#ece7df}
-#btnCloseAll{font-size:21px;color:#a39d93;padding:8px 18px;margin-right:-18px;border-radius:5px;outline:2px solid transparent}
-#btnCloseAll.focus{color:#ece7df;background:rgba(20,19,16,.86);outline-color:#ece7df}
+#btnCloseAll{font-size:21px;color:#a39d93;padding:8px 18px;margin-right:-18px;border-radius:8px;outline:2px solid transparent}
+#btnCloseAll.focus{color:#ece7df;background:var(--glass-fill-strong);outline-color:#ece7df}
 #btnCloseAll.none{display:none}
 #recents .tile.rc{width:372px;margin-right:32px;padding:0;background:none;outline:0;opacity:.5}
 #recents .tile.rc.focus{opacity:1}
-.rc .shot{position:relative;width:372px;height:209px;border-radius:6px;overflow:hidden;background:#141310;
-  outline:2px solid transparent;outline-offset:4px;-webkit-transition:outline-color .12s;transition:outline-color .12s}
+.rc .shot{position:relative;width:372px;height:209px;border-radius:14px;overflow:hidden;background:var(--glass-fill);
+  outline:2px solid transparent;outline-offset:4px;-webkit-transition:outline-color .12s;transition:outline-color .12s;
+  box-shadow:0 1px 0 rgba(255,255,255,.1) inset}
 .rc.focus .shot{outline-color:#ece7df}
 .rc.on-x .shot{outline-color:#3a3732}
 .rc .shot img{display:block;width:100%;height:100%;object-fit:cover}
@@ -191,6 +239,7 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
 </head>
 <body>
 <div id="stage">
+  <div id="ambient"></div>
   <div id="wall"><div class="layer"></div><div class="layer"></div></div>
   <div id="scrim"></div>
 
@@ -398,12 +447,38 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
 
   var hiddenLabel = '<span class="hid">' + esc(t('home.hidden', 'Hidden')) + '</span>';
 
+  /*
+   * A handful of well-known apps get a sharp vector icon from
+   * /assets/icons/ instead of whatever small native icon webOS has for
+   * them (see server/assets/icons/ATTRIBUTION.md for sources/licenses).
+   * Every other app keeps its native icon; this is a short list of
+   * everyday apps, not a theme pack. Matched by the exact webOS app ID, so
+   * a near-miss never borrows another app's icon.
+   */
+  var ICON_OVERRIDES = {
+    'netflix': 'netflix',
+    'youtube.leanback.v4': 'youtube',
+    'com.apple.appletv': 'apple-tv',
+    'com.apple.appletv.web': 'apple-tv',
+    'com.disney.disneyplus-prod': 'disney-plus',
+    'amazon': 'prime-video',
+    'com.arte.tv': 'arte',
+    'com.3827031.168353': 'arte',
+    'ard.mediathek': 'das-erste',
+    'de.zdf.app.zdfm3': 'zdf',
+    'org.jellyfin.webos': 'jellyfin',
+    'spotify-beehive': 'spotify',
+    'com.spotify.tv.webos': 'spotify'
+  };
+
   var TILE = {
     app: function (a, i) {
       var cls = 'tile app' + (hidden('app', a.id) ? ' hidden' : '');
-      var icon = a.icon ? '<img src="' + esc(a.icon) + '" alt="">' :
+      var override = ICON_OVERRIDES[a.id];
+      var icon = override ? '<img class="sharp" src="/assets/icons/' + override + '.svg" alt="">' :
+        a.icon ? '<img src="' + esc(a.icon) + '" alt="">' :
         '<span class="mono">' + esc(a.lg ? 'LG' : String(a.title).charAt(0)) + '</span>';
-      return '<div class="' + cls + '" data-c="' + i + '">' + icon + '<div class="nm">' + esc(a.title) + '</div>' + hiddenLabel + '</div>';
+      return '<div class="' + cls + '" data-c="' + i + '"><div class="icon">' + icon + '</div><div class="nm">' + esc(a.title) + '</div>' + hiddenLabel + '</div>';
     },
     dev: function (d, i) {
       var last = lastOn.kind === 'input' && lastOn.port === d.port;
