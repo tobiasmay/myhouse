@@ -18,11 +18,14 @@
   /* Glass tokens: a frosted surface over the wallpaper, not a flat panel.
      Kept subtle so the picture (or the ambient wash, with none uploaded)
      still reads through. Falls back to a plain translucent fill on a
-     browser without backdrop-filter; nothing breaks, it just loses the blur. */
+     browser without backdrop-filter; nothing breaks, it just loses the blur.
+     236,231,223 is #ece7df as rgba() decimals, the look's own text colour;
+     applyColours() below swaps that triplet too, so a chosen text colour
+     tints the glass the same way it tints everything else. Focus itself
+     stays a literal outline-color:#ece7df (see .tile.focus), so applyColours'
+     special case still turns it into the chosen accent instead. */
   --glass-fill:rgba(236,231,223,.08);
   --glass-fill-strong:rgba(236,231,223,.16);
-  --glass-edge:rgba(236,231,223,.16);
-  --glass-edge-strong:rgba(236,231,223,.38);
   --glass-blur:blur(22px) saturate(160%);
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -120,7 +123,7 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
    shelf rather than painted a flat panel, with the accent-less outline the
    look's own colours swap keeps for focus. */
 .tile.focus{background:linear-gradient(165deg,var(--glass-fill-strong),var(--glass-fill));
-  outline-color:var(--glass-edge-strong);opacity:1;
+  outline-color:#ece7df;opacity:1;
   -webkit-transform:translateY(-3px) scale(1.035);transform:translateY(-3px) scale(1.035);
   box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 18px 40px -12px rgba(0,0,0,.6)}
 
@@ -1138,6 +1141,11 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
     });
     return out;
   }
+  // '#rrggbb' to the 'r,g,b' decimal form the glass tokens' rgba() uses.
+  function rgbTriplet(hex) {
+    var n = parseInt(hex.slice(1), 16);
+    return [n >> 16, (n >> 8) & 255, n & 255].join(',');
+  }
   function applyColours(c) {
     var key = c ? c.text + c.accent : '';
     if (key === lookShown) return;
@@ -1146,8 +1154,13 @@ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antia
     var swap = { '#ece7df': c.text, '#a39d93': shade(c.text, 0.69), '#6b665e': shade(c.text, 0.45),
                  '#e9ad55': c.accent, '#231d12': shade(c.accent, 0.15) };
     // Replace once: a chosen accent may itself be one of the original colours.
-    $('look').textContent = LOOK.replace(/outline-color:#ece7df\b|#(?:ece7df|a39d93|6b665e|e9ad55|231d12)\b/g,
+    var look = LOOK.replace(/outline-color:#ece7df\b|#(?:ece7df|a39d93|6b665e|e9ad55|231d12)\b/g,
       function (m) { return m === 'outline-color:#ece7df' ? 'outline-color:' + c.accent : swap[m]; });
+    // The glass tokens (--glass-fill etc.) are rgba(236,231,223,...), the
+    // text colour's decimal triplet; retint them the same way so the glass
+    // follows a chosen text colour instead of staying the default warm white.
+    look = look.replace(/236,231,223/g, rgbTriplet(c.text));
+    $('look').textContent = look;
   }
 
   // ---------------------------------------------------------------- data
